@@ -33,7 +33,7 @@
 #include <Network.h>
 #include <Reading.h>
 
-#define DEEP_SLEEP_TIME 5
+#define DEEP_SLEEP_TIME 55
 RTC_NOINIT_ATTR bool Maintanance_mode;
 
 Reading* reading;
@@ -90,6 +90,5 @@ void goToDeepSleep()
     // Configure the timer to wake us up!
     esp_sleep_enable_timer_wakeup(DEEP_SLEEP_TIME * 1000000L);
     esp_light_sleep_start();
-    // Go to sleep! Zzzz
 //    esp_deep_sleep_start();
 }

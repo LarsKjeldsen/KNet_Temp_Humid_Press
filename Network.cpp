@@ -3,7 +3,7 @@
 #include "WIFI-Secret.h"
 #include <ArduinoOTA.h>
 
-#define WIFI_TIMEOUT 5000 // 5 seconds in milliseconds
+#define WIFI_TIMEOUT 5000
 
 extern bool Maintanance_mode;
 
@@ -113,7 +113,7 @@ void Send_reading(Reading* r)
 
 	// What for all publish to finalyse
 	int i = 0;
-	while (i++ < 10) {
+	while (i++ < 100) {
 		delay(20);
 		MQTTclient.loop();
 	}
