@@ -19,7 +19,7 @@ void SendMQTT(const char *Topic, int32_t payload);
 void SendMQTT(const char *Topic, float payload);
 
 void Send_reading(Reading *);
-int GetStatusCode();
+bool GetStatusCode();
 
 #endif
 

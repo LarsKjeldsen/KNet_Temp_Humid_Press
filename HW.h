@@ -5,8 +5,8 @@
 #include "driver/rtc_io.h"
 
 // Wire
-#define SDA 18
-#define SCL 19
+#define SDA 19
+#define SCL 18
 
 
 void HW_setup();

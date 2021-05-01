@@ -34,13 +34,15 @@ Reading::Reading()
 
 void Reading::Get_weather()
 {
-//	bme.read(Press, Temp, Humid, BME280::TempUnit_Celsius, BME280::PresUnit_hPa);
+	bme.takeForcedMeasurement();
+
+	Temp = bme.readTemperature();  // Read temp before pressure
+	Humid = bme.readHumidity();
+
 	Press = bme.readPressure();
 	if (Press == NAN)
 		Press = bme.readPressure();
 	Press /= 100.0F;
-	Temp = bme.readTemperature();
-	Humid = bme.readHumidity();
 
 	Serial.printf("T: %.2f -P: %.2f -H: %.2f\n", Temp, Press, Humid);
 }

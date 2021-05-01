@@ -1,0 +1,4 @@
+# KNetSkur build property overrides
+#
+# local project board.txt overrides
+network.port=3232

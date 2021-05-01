@@ -76,9 +76,6 @@ bool WiFi_Setup()
 	Serial.print("WiFi connected IP address: ");
 	Serial.println(WiFi.localIP());
 
-
-//	Maintanance_mode = GetStatusCode();
-
 	return true;
 }
 
@@ -99,7 +96,7 @@ void WIFI_disconnect()
 		if (i++ >= 20)
 			ESP.restart();
 	}
-	
+
 	delay(10);
 
 	WiFi.mode(WIFI_OFF);
@@ -108,17 +105,18 @@ void WIFI_disconnect()
 void Send_reading(Reading* r)
 {
 	SendMQTT("KNet/Haven/Vejr/Temperatur", r->Temp);  delay(10);
-	SendMQTT("KNet/Haven/Vejr/Fugtighed",  r->Humid); delay(10);
-	SendMQTT("KNet/Haven/Vejr/Lufttryk",   r->Press); delay(10);
+	SendMQTT("KNet/Haven/Vejr/Fugtighed", r->Humid); delay(10);
+	SendMQTT("KNet/Haven/Vejr/Lufttryk", r->Press); delay(10);
 
-	// What for all publish to finalyse
+	delay(200);
+
 	int i = 0;
-	while (i++ < 100) {
-		delay(20);
-		MQTTclient.loop();
-	}
-
 	MQTTclient.disconnect();
+	while (MQTTclient.state() != -1) {
+		if (i++ > 500)
+			ESP.restart();
+		delay(10);
+	}
 }
 
 bool MQTT_Setup()
@@ -130,6 +128,7 @@ bool MQTT_Setup()
 	if (WiFi.status() != WL_CONNECTED)
 		WiFi_Setup();
 
+	Serial.print("..1");
 	String IP = WiFi.localIP().toString();
 
 	MQTTclient.setServer(MQTTServer, 1883);
@@ -138,6 +137,7 @@ bool MQTT_Setup()
 	String clientId = "Skur_V2" + IP;
 
 	MQTTclient.connect(clientId.c_str());
+	Serial.print("..2");
 
 	while (!MQTTclient.connected())
 	{
@@ -152,6 +152,7 @@ bool MQTT_Setup()
 			return false;
 		}
 	}
+	Serial.println("..3");
 	return true;
 }
 
@@ -163,7 +164,7 @@ void SendMQTT(const char* Topic, int32_t payload)
 
 	char s[20];
 	itoa(payload, s, 10);
-//	Serial.print("Sending : "); Serial.println(s);
+	//	Serial.print("Sending : "); Serial.println(s);
 	MQTTclient.publish(Topic, s, false);
 }
 
@@ -178,7 +179,7 @@ void SendMQTT(const char* Topic, float payload)
 }
 
 
-int GetStatusCode()
+bool GetStatusCode()
 {
 	httpClient.begin("http://192.168.1.21:8123/api/states/input_boolean.temp_humid_press_debug");
 	httpClient.addHeader("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwMmEyNmYxZDViMDE0MWIxODhkNWMxZGM0NTk1ZjcxNCIsImlhdCI6MTYxNzM2NzY0MSwiZXhwIjoxOTMyNzI3NjQxfQ.iJ0YQy9E4U9Rwbs9EJMYl1-DIoBHCW6AAB0rL3mAsEw");
@@ -186,12 +187,7 @@ int GetStatusCode()
 
 	int httpCode = httpClient.GET();
 
-	if (httpCode == -11)  // Try again.
-	{
-		httpCode = httpClient.GET();
-	}
-
-//	Serial.print("HttpCode = "); Serial.println(httpCode);
+	Serial.print("HttpCode = "); Serial.println(httpCode);
 
 	if (httpCode == 200) { //Check for the returning code
 
@@ -201,6 +197,7 @@ int GetStatusCode()
 		if (root == NULL)
 			return false;
 		String besked_raw = cJSON_GetObjectItem(root, "state")->valuestring;
+		cJSON_Delete(root);
 		if (besked_raw == NULL)
 			return false;
 		if (besked_raw == "on")

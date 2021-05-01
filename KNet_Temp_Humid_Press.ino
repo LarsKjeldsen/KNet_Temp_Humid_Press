@@ -1,7 +1,7 @@
 /*
-    Name:       KNet_Temp_Humid_Press.ino
-    Created:	21-04-2021 16:45:09
-    Author:     Lars S. Kjeldsen
+	Name:       KNet_Temp_Humid_Press.ino
+	Created:	21-04-2021 16:45:09
+	Author:     Lars S. Kjeldsen
 */
 #include <ESPmDNS.h>
 #include <Update.h>
@@ -40,55 +40,64 @@ Reading* reading;
 
 void setup()
 {
-    Wire.begin(SDA, SCL);
-    Serial.begin(115200);
+	Wire.begin(SDA, SCL);
+	Serial.begin(115200);
 
-    HW_setup();
-    if (!WiFi_Setup()) {
-        goToDeepSleep();
-        ESP.restart();
-    }
+	HW_setup();
+	if (!WiFi_Setup()) {
+		goToLightSleep();
+		ESP.restart();
+	}
 
-    if (!MQTT_Setup()) {
-        goToDeepSleep();
-        ESP.restart();
-    }
+	if (!MQTT_Setup()) {
+		goToLightSleep();
+		ESP.restart();
+	}
 
-    Serial.println("Starter BME280");
-    reading = new Reading();
+	Serial.println("Starter BME280");
+	reading = new Reading();
 
-    reading->Get_weather();
-    Send_reading(reading);
+	reading->Get_weather();
+	Send_reading(reading);
 
-    Serial.println("Initialise done");
+	Serial.println("Initialise done");
 }
 
 
 void loop()
 {
-    unsigned long m = millis();
-    reading->Get_weather();
-    Send_reading(reading);
+	unsigned long m = millis();
+	reading->Get_weather();
+	Send_reading(reading);
 
-    if (!GetStatusCode())
-        goToDeepSleep();
+	if (!GetStatusCode())
+		goToLightSleep();
+	else
+	{
+		long i = millis() + (DEEP_SLEEP_TIME * 1000L);
+		
+		while (i > millis())
+		{
+			delay(100);
+			ArduinoOTA.handle();
+		}
+	}
 }
 
 
-
-void goToDeepSleep()
+void goToLightSleep()
 {
-    Serial.println("Going to sleep...");
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_OFF);
-    btStop();
+	Serial.println("Going to sleep...");
+	WiFi.disconnect(true);
+	WiFi.mode(WIFI_OFF);
+	btStop();
 
-    adc_power_off();
-    esp_wifi_stop();
-    esp_bt_controller_disable();
+	adc_power_off();
+	esp_wifi_stop();
+	esp_bt_controller_disable();
 
-    // Configure the timer to wake us up!
-    esp_sleep_enable_timer_wakeup(DEEP_SLEEP_TIME * 1000000L);
-    esp_light_sleep_start();
-//    esp_deep_sleep_start();
+	// Configure the timer to wake us up!
+	esp_sleep_enable_timer_wakeup(DEEP_SLEEP_TIME * 1000000L);
+	esp_light_sleep_start();
+	//    esp_deep_sleep_start();
 }
